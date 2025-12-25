@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🞄 Merry Christmas</title>
+  <title>đŸ�„ Merry Christmas</title>
   <style>
     :root{
       --bg1:#03110c;
@@ -14,7 +14,7 @@
       --muted:#b8d7ca;
       --gold:#ffd36a;
 
-      /* “Blend„ controls */
+      /* â€œBlendâ€� controls */
       --uiGlass: rgba(0,0,0,.18);
       --uiBorder: rgba(255,255,255,.12);
       --textAlpha: .92;
@@ -41,7 +41,7 @@
     #sky{ z-index:0; }
     #snowBack{ z-index:1; }
     /* Content is z-index:3 */
-    #snowFront{ z-index:6; } /* snow in front of content for “cinema„ */
+    #snowFront{ z-index:6; } /* snow in front of content for â€œcinemaâ€� */
 
     /* Minimal floating controls (not a window) */
     .hud{
@@ -125,8 +125,9 @@
       display:grid;
       grid-template-columns: 1.1fr .9fr;
       gap: 28px;
-      align-items:center;
+      align-items:start;            /* was center */
     }
+
 
     @media (max-width: 900px){
       .grid{grid-template-columns:1fr; gap:18px}
@@ -154,7 +155,7 @@
       border-radius:22px;
     }
 
-    /* “Ambient halo„ behind capy to tie it into the sky glow */
+    /* â€œAmbient haloâ€� behind capy to tie it into the sky glow */
     .halo{
       position:absolute;
       inset:-10% -10% -10% -10%;
@@ -172,9 +173,10 @@
     .textBlock{
       max-width: 58ch;
       margin-inline:auto;
+      margin-top: 8px;
       opacity: var(--textAlpha);
 
-      /* Soft readability without becoming a “window„ */
+      /* Soft readability without becoming a â€œwindowâ€� */
       text-shadow:
         0 2px 20px rgba(0,0,0,.45),
         0 0 32px rgba(255,240,210,.10);
@@ -231,9 +233,9 @@
   <div class="floorFade"></div>
 
   <div class="hud">
-    <div class="title" id="hudTitle">🞄 Merry Christmas</div>
-    <button class="btn" id="musicBtn">▶ Play music</button>
-    <button class="btn secondary" id="snowBtn">Snow: ON ➄</button>
+    <div class="title" id="hudTitle">đŸ�„ Merry Christmas</div>
+    <button class="btn" id="musicBtn">â–¶ Play music</button>
+    <button class="btn secondary" id="snowBtn">Snow: ON â�„</button>
     <div class="slider">
       Volume
       <input id="vol" type="range" min="0" max="100" value="55" />
@@ -250,14 +252,15 @@
       </div>
 
       <div class="textBlock">
-        <h1 class="headline" id="headline">Merry Christmas ✨</h1>
+        <h1 class="headline" id="headline">Merry Christmas ✨¨</h1>
         <p class="message" id="msg">Dear chị Cún,
 
-Merry Christmas! 🞄
+🎄 Merry Christmas! 🎄
 
-Chúc chị Cún mùa Giáng Sinh an lành và Năm Mới nhiỞu niỞm vui, sức khỞe, thành công, lên band cùng anh Miu và luôn yêu thương, không mắng em nữa.
+Chúc chị Cún mùa Giáng Sinh an lành và Năm Mới nhiều niềm vui, sức khỏe, thành công, lên band cùng anh Miu và luôn yêu thương, không mắng em (nhiều) nữa.
 
-— Capu bé bỞng mũi cao</p>
+— From Capu bé bỏng mũi cao with love 🤟
+(chị Cún nhớ click vào "Play music" nhá 🤜🤛)</p>
         
       </div>
     </div>
@@ -271,7 +274,7 @@ Chúc chị Cún mùa Giáng Sinh an lành và Năm Mới nhiỞu niỞm vui, s�
 
 <script>
 /* Optional: customize text */
-document.getElementById("hudTitle").textContent = "🞄 Merry Christmas 🞄";
+document.getElementById("hudTitle").textContent = "đŸ�„ Merry Christmas đŸ�„";
 
 const headlineEl = document.getElementById("headline");
 const msgEl = document.getElementById("msg");
@@ -280,11 +283,11 @@ const msgEl = document.getElementById("msg");
 const HEADLINE_TEXT = "✨ Merry Xmas ✨";
 const MESSAGE_TEXT = `Dear chị Cún,
 
-🞄 Merry Christmas! 🞄
+🎄 Merry Christmas! 🎄
 
-Chúc chị Cún mùa Giáng Sinh an lành và Năm Mới nhiỞu niỞm vui, sức khỞe, thành công, lên band cùng anh Miu và luôn yêu thương, không mắng em (nhiỞu) nữa.
+Chúc chị Cún mùa Giáng Sinh an lành và Năm Mới nhiều niềm vui, sức khỏe, thành công, lên band cùng anh Miu và luôn yêu thương, không mắng em (nhiều) nữa.
 
-— From Capu bé bỞng mũi cao with love 🤟
+— From Capu bé bỏng mũi cao with love 🤟
 (chị Cún nhớ click vào "Play music" nhá 🤜🤛)`;
 
 // Typewriter (supports line breaks)
@@ -299,7 +302,7 @@ function typeWriter(el, text, {
 
   // optional cursor
   const cursorEl = document.createElement("span");
-  cursorEl.textContent = "▞";
+  cursorEl.textContent = "â–�";
   cursorEl.style.opacity = "0.85";
   cursorEl.style.marginLeft = "2px";
   cursorEl.style.animation = "blink 1s steps(2,end) infinite";
@@ -428,7 +431,7 @@ function buildSprites(){
     makeRadial(52, [[0,"rgba(255,255,255,.95)"],[.22,"rgba(255,255,255,.46)"],[.62,"rgba(255,255,255,.10)"],[1,"rgba(255,255,255,0)"]])
   ];
 
-  // Foreground “lens„ blobs (existing)
+  // Foreground â€œlensâ€� blobs (existing)
   S.sprites.bokeh = [
     makeRadial(120, [[0,"rgba(255,255,255,.34)"],[.25,"rgba(255,255,255,.12)"],[.7,"rgba(255,255,255,.03)"],[1,"rgba(255,255,255,0)"]]),
     makeRadial(180, [[0,"rgba(255,255,255,.26)"],[.22,"rgba(255,255,255,.10)"],[.7,"rgba(255,255,255,.025)"],[1,"rgba(255,255,255,0)"]]),
@@ -717,7 +720,7 @@ function drawSnowLayer(g, flakes, isFront){
       g.translate(x, y);
       g.rotate(f.spin * 0.25);
 
-      // subtle glow pass (makes shape “pop„)
+      // subtle glow pass (makes shape â€œpopâ€�)
       g.globalAlpha = a * 0.35;
       g.lineCap = "round";
       g.lineJoin = "round";
@@ -828,7 +831,7 @@ function drawSnowLayer(g, flakes, isFront){
 
   document.getElementById("snowBtn").addEventListener("click", ()=>{
     S.snowOn = !S.snowOn;
-    document.getElementById("snowBtn").textContent = S.snowOn ? "Snow: ON ➄" : "Snow: OFF";
+    document.getElementById("snowBtn").textContent = S.snowOn ? "Snow: ON â�„" : "Snow: OFF";
   });
 
   scheduleNextShoot();
@@ -853,13 +856,13 @@ musicBtn.addEventListener("click", async () => {
     try{
       audioEl.load();
       await audioEl.play();
-      musicBtn.textContent = "➸ Pause music";
+      musicBtn.textContent = "â�¸ Pause music";
     }catch{
-      musicBtn.textContent = "▶ Play music";
+      musicBtn.textContent = "â–¶ Play music";
     }
   } else {
     audioEl.pause();
-    musicBtn.textContent = "▶ Play music";
+    musicBtn.textContent = "â–¶ Play music";
   }
 });
 </script>
