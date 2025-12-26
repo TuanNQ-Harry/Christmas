@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>🎄 Merry Christmas</title>
+
   <style>
     :root{
       --bg1:#03110c;
@@ -17,6 +18,11 @@
       --uiBorder: rgba(255,255,255,.12);
       --textAlpha: .94;
       --imgAlpha: .98;
+
+      --safeTop: env(safe-area-inset-top, 0px);
+      --safeBottom: env(safe-area-inset-bottom, 0px);
+      --safeLeft: env(safe-area-inset-left, 0px);
+      --safeRight: env(safe-area-inset-right, 0px);
     }
 
     *{box-sizing:border-box}
@@ -28,6 +34,9 @@
         radial-gradient(900px 700px at 80% 20%, rgba(255,211,106,.10), transparent 55%),
         linear-gradient(140deg,var(--bg1),var(--bg2));
       overflow:hidden;
+      overscroll-behavior:none;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
     /* Canvases */
@@ -35,18 +44,18 @@
       position:fixed; inset:0;
       width:100vw; height:100vh;
       pointer-events:none;
+      user-select:none;
     }
     #sky{ z-index:0; }
-    #snowBack{ z-index:1; }
-    #snowFront{ z-index:6; }
+    #snow{ z-index:5; } /* single snow layer = faster on iOS */
 
-    /* Minimal HUD */
+    /* HUD (kept minimal; safe-area aware) */
     .hud{
       position:fixed;
       left:50%;
-      top:16px;
+      top: calc(var(--safeTop) + 12px);
       transform:translateX(-50%);
-      z-index:7;
+      z-index:10;
 
       display:flex;
       gap:10px;
@@ -56,7 +65,6 @@
 
       padding:10px 12px;
       border-radius:999px;
-
       background: var(--uiGlass);
       border: 1px solid var(--uiBorder);
       backdrop-filter: blur(10px);
@@ -85,6 +93,7 @@
       font-weight:650;
       font-size:13px;
       user-select:none;
+      -webkit-tap-highlight-color: transparent;
     }
     .btn.secondary{
       background:rgba(255,255,255,.06);
@@ -92,6 +101,7 @@
     }
     .btn:hover{filter:brightness(1.08)}
     .btn:active{transform:translateY(1px)}
+
     .slider{
       display:flex; align-items:center; gap:8px;
       padding:7px 10px;
@@ -104,22 +114,25 @@
     }
     input[type="range"]{width:110px}
 
-    /* Scene (single hero) */
+    /* Scene */
     .scene{
       position:relative;
-      z-index:3;
+      z-index:6; /* below HUD; above sky */
       height:100%;
       display:grid;
       place-items:center;
-      padding:88px 18px 18px; /* space for HUD */
+      padding:
+        calc(var(--safeTop) + 88px)
+        calc(var(--safeRight) + 18px)
+        calc(var(--safeBottom) + 18px)
+        calc(var(--safeLeft) + 18px);
     }
 
-    /* Capy wrapper */
     .capyWrap{
       position:relative;
-      width:min(720px, 92vw);
+      width:min(820px, 94vw);
       margin-inline:auto;
-      isolation:isolate; /* keeps blending sane */
+      isolation:isolate; /* keep blending sane */
     }
 
     .halo{
@@ -143,16 +156,13 @@
       display:block;
       opacity: var(--imgAlpha);
       border-radius:22px;
-
       filter:
         drop-shadow(0 24px 65px rgba(0,0,0,.42))
         drop-shadow(0 0 34px rgba(255,240,210,.12));
-
-      /* makes it feel embedded into the glow */
-      mix-blend-mode: screen;
+      mix-blend-mode: screen; /* auto-disabled on iOS for perf via .ios */
     }
 
-    /* TEXT OVER THE IMAGE (VERTICAL) */
+    /* Text overlay on top of image */
     .overlay{
       position:absolute;
       inset:0;
@@ -160,29 +170,27 @@
       display:flex;
       flex-direction:column;
       align-items:center;
-      justify-content:flex-start; /* stick to top of image */
+      justify-content:flex-start;
       text-align:center;
 
-      padding: clamp(18px, 4.2vw, 44px) clamp(14px, 4vw, 40px);
+      padding: clamp(16px, 4.2vw, 44px) clamp(12px, 4vw, 40px);
       pointer-events:none;
 
       opacity: var(--textAlpha);
 
-      /* gentle cinematic “lift” so text reads on busy areas without a card */
       background: linear-gradient(
         to bottom,
-        rgba(0,0,0,.28),
-        rgba(0,0,0,.10) 40%,
-        rgba(0,0,0,0) 72%
+        rgba(0,0,0,.30),
+        rgba(0,0,0,.12) 42%,
+        rgba(0,0,0,0) 75%
       );
       border-radius:22px;
     }
 
     .headline{
-      margin-top:20px;
       margin:0 0 10px 0;
-      font-size: clamp(30px, 4.2vw, 56px);
-      line-height:1.05;
+      font-size: clamp(30px, 5.0vw, 58px);
+      line-height:1.04;
       letter-spacing:-0.6px;
 
       background: linear-gradient(
@@ -202,18 +210,14 @@
 
     .message{
       margin:0;
-      max-width: 52ch;
-      font-size: clamp(15px, 1.6vw, 18px);
+      max-width: 54ch;
+      font-size: clamp(15px, 2.2vw, 19px);
       line-height:1.55;
-      color: rgba(234,247,240,.94);
+      color: rgba(234,247,240,.96);
       white-space:pre-wrap;
-
       text-shadow:
         0 2px 18px rgba(0,0,0,.55),
         0 0 30px rgba(255,240,210,.10);
-
-      /* optional “blend into glow”; if too washed out, change to normal */
-      mix-blend-mode: screen;
     }
 
     .sub{
@@ -224,24 +228,25 @@
       text-shadow: 0 2px 16px rgba(0,0,0,.55);
     }
 
-    .floorFade{
-      position:fixed;
-      left:0; right:0; bottom:0;
-      height:32vh;
-      z-index:2;
-      pointer-events:none;
-      background: linear-gradient(to top, rgba(0,0,0,.34), rgba(0,0,0,0));
+    /* Typewriter cursor blink */
+    @keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+    /* Slight mobile tuning */
+    @media (max-width: 520px){
+      input[type="range"]{width:90px}
+      .hud{gap:8px}
+      .capyWrap{width:min(940px, 96vw)}
+      .overlay{padding: 18px 14px}
     }
 
-    /* Typewriter cursor blink */
-    @keyframes blink { 50% { opacity: 0; } }
+    /* iOS perf: blend modes are expensive; disable them */
+    .ios .capy{ mix-blend-mode: normal; }
   </style>
 </head>
 
 <body>
   <canvas id="sky"></canvas>
-  <canvas id="snowBack"></canvas>
-  <div class="floorFade"></div>
+  <canvas id="snow"></canvas>
 
   <div class="hud">
     <div class="title" id="hudTitle">🎄 Merry Christmas</div>
@@ -257,41 +262,40 @@
     <div class="capyWrap">
       <div class="halo"></div>
 
-      <!-- Put your image in the repo (same folder as this HTML) -->
+      <!-- Put Capu.jpg in the same folder as this HTML (or adjust the path) -->
       <img class="capy" src="./Capu.jpg" alt="Festive Capu" />
 
-      <!-- Text on top of the image (vertical stack) -->
       <div class="overlay">
-        <!-- These will be overwritten by the typewriter script -->
         <h1 class="headline" id="headline"></h1>
-        <p class="message" id="msg"></p>       
+        <p class="message" id="msg"></p>
+        <p class="sub">Music won’t autoplay; click Play once.</p>
       </div>
     </div>
   </div>
 
-  <canvas id="snowFront"></canvas>
-
-  <!-- Put your audio in the repo (same folder as this HTML).
-       Avoid spaces in filename for GitHub Pages reliability. -->
+  <!-- If your MP3 filename has spaces, keep %20 or (better) rename it. -->
   <audio id="bgm" preload="auto" loop>
-    <source src="./jingle-bells.mp3" type="audio/mpeg">
+    <source src="./Ho%20Ho%20Ho%20Jingle%20Bell.mp3" type="audio/mpeg">
   </audio>
 
-  <script>
+<script>
 /* =========================
-   Simple UI text (optional)
+   Device profile (best for iPhone 15 Pro / iOS WebKit)
    ========================= */
-document.getElementById("hudTitle").textContent = "🎄 Merry Christmas";
+(function(){
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) ||
+                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (isIOS) document.documentElement.classList.add("ios");
 
-/* =========================
-   Typewriter overlay text
-   ========================= */
-const headlineEl = document.getElementById("headline");
-const msgEl = document.getElementById("msg");
+  const prefersReducedMotion = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-// Put your final text here
-const HEADLINE_TEXT = "✨ Merry Xmas ✨";
-const MESSAGE_TEXT = `Dear chị Cún,
+  /* =========================
+     Typewriter text (FULL + safe)
+     ========================= */
+  const HEADLINE_TEXT = "✨ Merry Xmas ✨";
+  const MESSAGE_TEXT = `Dear chị Cún,
 
 🎄 Merry Christmas! 🎄
 
@@ -300,97 +304,163 @@ Chúc chị Cún mùa Giáng Sinh an lành và Năm Mới nhiều niềm vui, s�
 — From Capu bé bỏng mũi cao with love 🤟
 (chị Cún nhớ click vào "Play music" nhá 🤜🤛)`;
 
-function typeWriter(el, text, {
-  cps = 22,          // characters per second
-  startDelay = 0,    // ms
-  jitter = 0.35,     // randomness in speed
-  cursor = true
-} = {}){
-  el.textContent = "";
-  let i = 0;
+  const headlineEl = document.getElementById("headline");
+  const msgEl = document.getElementById("msg");
 
-  let cursorEl = null;
-  if(cursor){
-    cursorEl = document.createElement("span");
-    cursorEl.textContent = "▍";
-    cursorEl.style.opacity = "0.85";
-    cursorEl.style.marginLeft = "2px";
-    cursorEl.style.animation = "blink 1s steps(2,end) infinite";
-    el.appendChild(cursorEl);
-  }
+  function typeWriter(el, text, opts = {}){
+    const {
+      cps = 22,          // chars per second
+      startDelay = 0,    // ms
+      jitter = 0.25,     // randomness
+      cursor = true
+    } = opts;
 
-  const base = 1000 / Math.max(1, cps);
+    el.textContent = "";
+    let i = 0;
 
-  function tick(){
-    if(i >= text.length){
-      if(cursorEl) cursorEl.remove();
-      return;
+    let cursorEl = null;
+    if (cursor){
+      cursorEl = document.createElement("span");
+      cursorEl.textContent = "▍";
+      cursorEl.style.opacity = "0.85";
+      cursorEl.style.marginLeft = "2px";
+      cursorEl.style.animation = "blink 1s steps(2,end) infinite";
+      el.appendChild(cursorEl);
     }
 
-    const ch = text[i++];
-    if(cursorEl){
-      cursorEl.insertAdjacentText("beforebegin", ch);
-    }else{
-      el.textContent += ch;
+    const base = 1000 / Math.max(1, cps);
+
+    function tick(){
+      if (i >= text.length){
+        if (cursorEl) cursorEl.remove();
+        return;
+      }
+      const ch = text[i++];
+
+      if (cursorEl){
+        cursorEl.insertAdjacentText("beforebegin", ch);
+      } else {
+        el.textContent += ch;
+      }
+
+      const r = (Math.random()*2 - 1) * jitter; // [-jitter, +jitter]
+      const next = Math.max(12, base * (1 + r));
+      setTimeout(tick, next);
     }
 
-    const r = (Math.random()*2 - 1) * jitter; // [-jitter, +jitter]
-    const next = base * (1 + r);
-    setTimeout(tick, Math.max(10, next));
+    setTimeout(tick, startDelay);
   }
 
-  setTimeout(tick, startDelay);
-}
+  // Start typing (headline then message)
+  typeWriter(headlineEl, HEADLINE_TEXT, { cps: isIOS ? 16 : 18, startDelay: 250, jitter: 0.20, cursor: true });
+  typeWriter(msgEl, MESSAGE_TEXT,       { cps: isIOS ? 22 : 26, startDelay: 1100, jitter: 0.28, cursor: true });
 
-// Run sequence: headline then message
-typeWriter(headlineEl, HEADLINE_TEXT, { cps: 18, startDelay: 250, jitter: 0.25, cursor: true });
-typeWriter(msgEl, MESSAGE_TEXT, { cps: 28, startDelay: 1200, jitter: 0.35, cursor: true });
+  /* =========================
+     Audio controls (iOS-friendly)
+     ========================= */
+  document.getElementById("hudTitle").textContent = "🎄 Merry Christmas";
 
-/* =========================
-   Cinematic sky + snow + shooting stars
-   ========================= */
-(function(){
+  const audioEl = document.getElementById("bgm");
+  const musicBtn = document.getElementById("musicBtn");
+  const vol = document.getElementById("vol");
+
+  function setVol(){ audioEl.volume = Number(vol.value) / 100; }
+  vol.addEventListener("input", setVol);
+  setVol();
+
+  musicBtn.addEventListener("click", async () => {
+    if (audioEl.paused) {
+      try{
+        audioEl.load();
+        await audioEl.play();
+        musicBtn.textContent = "⏸ Pause music";
+      }catch{
+        musicBtn.textContent = "▶ Play music";
+      }
+    } else {
+      audioEl.pause();
+      musicBtn.textContent = "▶ Play music";
+    }
+  });
+
+  /* =========================
+     Cinematic sky + single-layer snow (optimized for iOS WebKit)
+     Key optimizations:
+       - single snow canvas (huge win)
+       - hard DPR caps per layer
+       - static background pre-render
+       - adaptive FPS (sky 30fps, snow 45fps on iOS)
+       - pause when tab hidden
+       - pre-render snowflake shapes to sprites (no stroking every frame)
+     ========================= */
   const skyC = document.getElementById("sky");
-  const backC = document.getElementById("snowBack");
-  const frontC = document.getElementById("snowFront");
+  const snowC = document.getElementById("snow");
 
-  const sky = skyC.getContext("2d", { alpha:true });
-  const back = backC.getContext("2d", { alpha:true });
-  const front = frontC.getContext("2d", { alpha:true });
+  const sky = skyC.getContext("2d", { alpha:true, desynchronized:true });
+  const snow = snowC.getContext("2d", { alpha:true, desynchronized:true });
 
   const clamp = (n,a,b)=>Math.max(a,Math.min(b,n));
   const lerp = (a,b,t)=>a+(b-a)*t;
 
-  const S = {
-    w:0,h:0,dpr:1,
-    t:0,last:0,
-    snowOn:true,
-    stars:[],
-    shooters:[],
-    flakesBack:[],
-    flakesFront:[],
-    sprites:{ snow:[], bokeh:[] },
-    nextShoot:0
-  };
-
-  const CFG = {
-    starCountPerPixel: 0.000015,
+  // Profile tuned for iPhone 15 Pro (still battery-conscious)
+  const PROFILE = isIOS ? {
+    dprSky: 1.25,      // lower than device DPR (saves fill-rate)
+    dprSnow: 1.00,
+    skyFPS: 30,
+    snowFPS: 45,
+    starCap: 420,
+    snowCap: 420,
+    bokehCap: 18,
+    haze: 0.16,
+    vignette: 0.26,
+    windBase: 12,
+    windGust: 26,
+    shootMinGap: 7.5,
+    shootMaxGap: 14.5
+  } : {
+    dprSky: Math.min(2, window.devicePixelRatio || 1),
+    dprSnow: Math.min(2, window.devicePixelRatio || 1),
+    skyFPS: 60,
+    snowFPS: 60,
     starCap: 720,
-
-    shootMinGap: 6.5,
-    shootMaxGap: 14.0,
-    shootChance: 1.0,
-
-    backDensity: 0.000045,
-    frontDensity: 0.000020,
-    snowCapBack: 680,
-    snowCapFront: 230,
-
+    snowCap: 760,
+    bokehCap: 28,
+    haze: 0.18,
+    vignette: 0.28,
     windBase: 14,
     windGust: 34,
+    shootMinGap: 6.5,
+    shootMaxGap: 14.0
+  };
 
-    vignette: 0.28,
-    haze: 0.18
+  const S = {
+    w:0,h:0,
+    skyDpr:1, snowDpr:1,
+    t:0,
+    last:0,
+    running:true,
+    snowOn: !prefersReducedMotion,
+
+    // sky
+    stars:[],
+    shooters:[],
+    nextShoot: 0,
+
+    // snow
+    flakes:[],
+
+    // sprites
+    sprGlow:[],
+    sprBokeh:[],
+    sprFlake:[],
+
+    // cached gradients + static bg
+    staticSky: null,
+    fogGrad: null,
+
+    // frame pacing
+    skyAcc: 0,
+    snowAcc: 0
   };
 
   function gust(t){
@@ -401,58 +471,129 @@ typeWriter(msgEl, MESSAGE_TEXT, { cps: 28, startDelay: 1200, jitter: 0.35, curso
     );
   }
 
-  function resize(){
-    S.dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-    S.w = window.innerWidth;
-    S.h = window.innerHeight;
+  function makeSpriteCanvas(size){
+    const c = document.createElement("canvas");
+    c.width = c.height = size;
+    return c;
+  }
 
-    for(const c of [skyC, backC, frontC]){
-      c.width = Math.floor(S.w * S.dpr);
-      c.height = Math.floor(S.h * S.dpr);
-      c.style.width = S.w + "px";
-      c.style.height = S.h + "px";
+  function buildGlowSprite(size, innerA, midA, outerA){
+    const c = makeSpriteCanvas(size);
+    const g = c.getContext("2d");
+    const cx = size/2, cy = size/2;
+    const r0 = size * 0.08;
+    const r1 = size * 0.50;
+
+    const grad = g.createRadialGradient(cx, cy, r0, cx, cy, r1);
+    grad.addColorStop(0.00, `rgba(255,255,255,${innerA})`);
+    grad.addColorStop(0.28, `rgba(255,255,255,${midA})`);
+    grad.addColorStop(0.70, `rgba(255,255,255,${outerA})`);
+    grad.addColorStop(1.00, "rgba(255,255,255,0)");
+
+    g.fillStyle = grad;
+    g.beginPath(); g.arc(cx, cy, r1, 0, Math.PI*2); g.fill();
+
+    // tiny bright core
+    g.fillStyle = "rgba(255,255,255,0.90)";
+    g.beginPath(); g.arc(cx, cy, Math.max(1, size*0.04), 0, Math.PI*2); g.fill();
+    return c;
+  }
+
+  function buildSnowflakeSprite(size, arms = 6, thick = 1.4){
+    const c = makeSpriteCanvas(size);
+    const g = c.getContext("2d");
+    const cx = size/2, cy = size/2;
+
+    const baseR = size * 0.36;
+    const branchR = baseR * 0.34;
+
+    g.translate(cx, cy);
+
+    // glow pass
+    g.globalAlpha = 0.35;
+    g.strokeStyle = "rgba(255,255,255,1)";
+    g.lineCap = "round";
+    g.lineJoin = "round";
+    g.lineWidth = thick * 2.6;
+    for(let i=0;i<arms;i++){
+      const ang = (Math.PI*2*i)/arms;
+      g.beginPath();
+      g.moveTo(0,0);
+      g.lineTo(Math.cos(ang)*baseR, Math.sin(ang)*baseR);
+      g.stroke();
     }
-    buildSprites();
-    seedStars();
-    seedSnow(true);
+
+    // sharp pass
+    g.globalAlpha = 1;
+    g.lineWidth = thick * 1.2;
+    for(let i=0;i<arms;i++){
+      const ang = (Math.PI*2*i)/arms;
+      const x2 = Math.cos(ang)*baseR, y2 = Math.sin(ang)*baseR;
+
+      g.beginPath();
+      g.moveTo(0,0);
+      g.lineTo(x2,y2);
+      g.stroke();
+
+      const bx = Math.cos(ang) * baseR * 0.64;
+      const by = Math.sin(ang) * baseR * 0.64;
+
+      const bAng1 = ang + Math.PI/6;
+      const bAng2 = ang - Math.PI/6;
+
+      g.beginPath();
+      g.moveTo(bx,by);
+      g.lineTo(bx + Math.cos(bAng1)*branchR, by + Math.sin(bAng1)*branchR);
+      g.stroke();
+
+      g.beginPath();
+      g.moveTo(bx,by);
+      g.lineTo(bx + Math.cos(bAng2)*branchR, by + Math.sin(bAng2)*branchR);
+      g.stroke();
+    }
+
+    // core dot
+    g.fillStyle = "rgba(255,255,255,0.92)";
+    g.beginPath();
+    g.arc(0,0, Math.max(1, baseR*0.12), 0, Math.PI*2);
+    g.fill();
+
+    return c;
   }
 
   function buildSprites(){
-    const makeRadial = (size, stops) => {
-      const c = document.createElement("canvas");
-      c.width = c.height = size;
-      const g = c.getContext("2d");
-      const cx = size/2, cy = size/2;
-      const grad = g.createRadialGradient(cx, cy, size*0.08, cx, cy, size*0.5);
-      for(const [p, col] of stops) grad.addColorStop(p, col);
-      g.fillStyle = grad;
-      g.beginPath(); g.arc(cx, cy, size*0.5, 0, Math.PI*2); g.fill();
-      g.fillStyle = "rgba(255,255,255,0.88)";
-      g.beginPath(); g.arc(cx, cy, size*0.06, 0, Math.PI*2); g.fill();
-      return c;
-    };
-
-    S.sprites.snow = [
-      makeRadial(18, [[0,"rgba(255,255,255,.95)"],[.25,"rgba(255,255,255,.55)"],[.65,"rgba(255,255,255,.16)"],[1,"rgba(255,255,255,0)"]]),
-      makeRadial(26, [[0,"rgba(255,255,255,.95)"],[.25,"rgba(255,255,255,.55)"],[.65,"rgba(255,255,255,.14)"],[1,"rgba(255,255,255,0)"]]),
-      makeRadial(36, [[0,"rgba(255,255,255,.95)"],[.25,"rgba(255,255,255,.50)"],[.65,"rgba(255,255,255,.12)"],[1,"rgba(255,255,255,0)"]]),
-      makeRadial(52, [[0,"rgba(255,255,255,.95)"],[.22,"rgba(255,255,255,.46)"],[.62,"rgba(255,255,255,.10)"],[1,"rgba(255,255,255,0)"]])
+    // Glow flakes
+    S.sprGlow = [
+      buildGlowSprite(18, 0.95, 0.55, 0.16),
+      buildGlowSprite(26, 0.95, 0.55, 0.14),
+      buildGlowSprite(36, 0.95, 0.50, 0.12),
+      buildGlowSprite(52, 0.95, 0.46, 0.10)
     ];
 
-    S.sprites.bokeh = [
-      makeRadial(120, [[0,"rgba(255,255,255,.34)"],[.25,"rgba(255,255,255,.12)"],[.7,"rgba(255,255,255,.03)"],[1,"rgba(255,255,255,0)"]]),
-      makeRadial(180, [[0,"rgba(255,255,255,.26)"],[.22,"rgba(255,255,255,.10)"],[.7,"rgba(255,255,255,.025)"],[1,"rgba(255,255,255,0)"]]),
-      makeRadial(240, [[0,"rgba(255,255,255,.20)"],[.20,"rgba(255,255,255,.08)"],[.7,"rgba(255,255,255,.02)"],[1,"rgba(255,255,255,0)"]])
+    // Lens bokeh
+    S.sprBokeh = [
+      buildGlowSprite(110, 0.30, 0.12, 0.03),
+      buildGlowSprite(160, 0.24, 0.10, 0.025),
+      buildGlowSprite(220, 0.20, 0.08, 0.02)
+    ];
+
+    // Crisp snowflake shapes (pre-rendered!)
+    S.sprFlake = [
+      buildSnowflakeSprite(34, 6, 1.2),
+      buildSnowflakeSprite(42, 6, 1.3),
+      buildSnowflakeSprite(52, 6, 1.4),
+      buildSnowflakeSprite(64, 6, 1.5),
+      buildSnowflakeSprite(74, 6, 1.6)
     ];
   }
 
   function seedStars(){
-    const target = Math.min(CFG.starCap, Math.floor(S.w * S.h * CFG.starCountPerPixel));
-    S.stars = Array.from({length: target}, () => ({
+    const count = PROFILE.starCap;
+    S.stars = Array.from({length: count}, () => ({
       x: Math.random()*S.w,
-      y: Math.random()*S.h*0.85,
-      r: 0.3 + Math.random()*1.25,
-      a: 0.25 + Math.random()*0.65,
+      y: Math.random()*S.h*0.82,
+      r: 0.35 + Math.random()*1.10,
+      a: 0.22 + Math.random()*0.62,
       tw: 0.6 + Math.random()*2.2,
       ph: Math.random()*Math.PI*2
     }));
@@ -467,118 +608,165 @@ typeWriter(msgEl, MESSAGE_TEXT, { cps: 28, startDelay: 1200, jitter: 0.35, curso
                          : (Math.PI * (0.90 - Math.random()*0.10));
 
     const speed = 900 + Math.random()*650;
-    const len = 260 + Math.random()*240;
+    const len = 240 + Math.random()*220;
     const life = 0.55 + Math.random()*0.40;
 
-    return { x:startX, y:startY,
+    return {
+      x:startX, y:startY,
       vx: Math.cos(ang)*speed,
       vy: Math.sin(ang)*speed,
-      len, life, age:0,
+      len,
+      life,
+      age:0,
       glow: 0.7 + Math.random()*0.7
     };
   }
 
   function scheduleNextShoot(){
-    const gap = lerp(CFG.shootMinGap, CFG.shootMaxGap, Math.random());
-    S.nextShoot = S.t + gap / Math.max(0.1, CFG.shootChance);
+    const gap = lerp(PROFILE.shootMinGap, PROFILE.shootMaxGap, Math.random());
+    S.nextShoot = S.t + gap;
   }
 
-  function seedSnow(reseed){
-    const backTarget = Math.min(CFG.snowCapBack, Math.floor(S.w*S.h*CFG.backDensity));
-    const frontTarget = Math.min(CFG.snowCapFront, Math.floor(S.w*S.h*CFG.frontDensity));
+  function seedSnow(){
+    const n = PROFILE.snowCap;
+    const bN = PROFILE.bokehCap;
 
-    const mkFlake = (mode) => {
-      const z = Math.random();
-      const far = (mode === "back");
-      const spriteIdx = (z < 0.35) ? 0 : (z < 0.65) ? 1 : (z < 0.85) ? 2 : 3;
+    S.flakes = [];
 
-      // balanced: fewer crisp shapes in the far layer
-      const type = (Math.random() < (far ? 0.22 : 0.38)) ? "flake" : "glow";
-      const arms = (Math.random() < 0.75) ? 6 : (5 + Math.floor(Math.random()*3));
-      const thick = 1.1 + Math.random()*1.0;
-
-      const size  = far ? lerp(0.50, 1.10, Math.pow(z, 1.2)) : lerp(0.85, 1.55, Math.pow(z, 1.25));
-      const fall  = far ? lerp(22, 120, Math.pow(z, 1.1))  : lerp(60, 220, Math.pow(z, 1.1));
-      const alpha = far ? lerp(0.10, 0.52, Math.pow(z, 1.0)) : lerp(0.14, 0.62, Math.pow(z, 1.0));
-
-      return {
+    // Bokeh (few but large)
+    for(let i=0;i<bN;i++){
+      S.flakes.push({
+        kind: "bokeh",
         x: Math.random()*S.w,
         y: Math.random()*S.h,
-        z, size, fall, alpha,
-        spriteIdx,
-        ph: Math.random()*Math.PI*2,
-        wob: 0.4 + Math.random()*1.2,
-        spin: (Math.random()*2 - 1) * 0.9,
-        sparkle: (Math.random() < (far ? 0.08 : 0.12)) ? lerp(1.05, 1.55, Math.random()) : 1.0,
-        type, arms, thick
-      };
-    };
-
-    const mkBokeh = () => ({
-      x: Math.random()*S.w,
-      y: Math.random()*S.h,
-      vx: (Math.random()*2 - 1) * 9,
-      vy: 18 + Math.random()*35,
-      idx: Math.floor(Math.random()*S.sprites.bokeh.length),
-      a: 0.10 + Math.random()*0.18,
-      s: 0.45 + Math.random()*0.85,
-      ph: Math.random()*Math.PI*2
-    });
-
-    if(reseed){
-      S.flakesBack = [];
-      for(let i=0;i<backTarget;i++) S.flakesBack.push(mkFlake("back"));
-
-      S.flakesFront = [];
-      const bokehCount = Math.max(8, Math.floor(frontTarget*0.12));
-      for(let i=0;i<frontTarget-bokehCount;i++) S.flakesFront.push(mkFlake("front"));
-      for(let i=0;i<bokehCount;i++) S.flakesFront.push(mkBokeh());
-      return;
+        vx: (Math.random()*2 - 1) * 8,
+        vy: 20 + Math.random()*34,
+        idx: Math.floor(Math.random()*S.sprBokeh.length),
+        a: 0.10 + Math.random()*0.16,
+        s: 0.45 + Math.random()*0.85,
+        ph: Math.random()*Math.PI*2
+      });
     }
 
-    while(S.flakesBack.length < backTarget) S.flakesBack.push(mkFlake("back"));
-    while(S.flakesBack.length > backTarget) S.flakesBack.pop();
+    // Snow particles (glow + crisp)
+    for(let i=bN;i<n;i++){
+      const z = Math.random();
+      const isCrisp = Math.random() < (isIOS ? 0.32 : 0.40);
 
-    while(S.flakesFront.length < frontTarget) S.flakesFront.push(mkFlake("front"));
-    while(S.flakesFront.length > frontTarget) S.flakesFront.pop();
+      const size = lerp(0.75, 1.35, Math.pow(z, 1.25));
+      const fall = lerp(70, 220, Math.pow(z, 1.05));
+      const alpha = lerp(0.14, 0.62, Math.pow(z, 1.0));
+
+      S.flakes.push({
+        kind: isCrisp ? "flake" : "glow",
+        x: Math.random()*S.w,
+        y: Math.random()*S.h,
+        z,
+        size,
+        fall,
+        alpha,
+        ph: Math.random()*Math.PI*2,
+        wob: 0.4 + Math.random()*1.1,
+        spin: (Math.random()*2 - 1) * 0.8,
+        sparkle: (Math.random() < 0.12) ? lerp(1.05, 1.40, Math.random()) : 1.0,
+        idx: isCrisp
+          ? Math.floor(Math.random()*S.sprFlake.length)
+          : (z < 0.35 ? 0 : z < 0.65 ? 1 : z < 0.85 ? 2 : 3)
+      });
+    }
   }
 
-  function stepSnow(dt){
-    const g = gust(S.t);
-    const wind = CFG.windBase + CFG.windGust * g;
+  function buildStaticSky(){
+    const c = document.createElement("canvas");
+    c.width = skyC.width;
+    c.height = skyC.height;
+    const g = c.getContext("2d");
 
-    const moveFlake = (f, far) => {
-      const depth = far ? lerp(0.18, 0.85, f.z) : lerp(0.35, 1.25, f.z);
-      const swirl = Math.sin(f.ph + S.t*(0.9 + f.wob)) * (far ? 12 : 20) * lerp(0.2, 1.0, f.z);
+    // Work in device pixels
+    g.setTransform(1,0,0,1,0,0);
+    g.clearRect(0,0,c.width,c.height);
 
-      f.y += f.fall * dt;
-      f.x += (wind * depth + swirl) * dt;
-      f.ph += dt * (0.55 + f.wob) * 0.9;
+    // Convert to CSS pixels drawing by applying inverse scale
+    g.setTransform(S.skyDpr,0,0,S.skyDpr,0,0);
 
-      if(f.y > S.h + 60){ f.y = -60; f.x = Math.random()*S.w; }
-      if(f.x < -80) f.x = S.w + 80;
-      if(f.x > S.w + 80) f.x = -80;
-    };
+    // Base dark wash
+    const bg = g.createLinearGradient(0,0,0,S.h);
+    bg.addColorStop(0, "rgba(2,10,8,0.00)");
+    bg.addColorStop(0.35, "rgba(2,10,8,0.10)");
+    bg.addColorStop(1, "rgba(0,0,0,0.28)");
+    g.fillStyle = bg;
+    g.fillRect(0,0,S.w,S.h);
 
-    for(const f of S.flakesBack) moveFlake(f, true);
+    // Moon glow
+    const mx = S.w * 0.20;
+    const my = S.h * 0.18;
+    const mr = Math.min(S.w,S.h) * 0.22;
+    const mg = g.createRadialGradient(mx,my, mr*0.06, mx,my, mr);
+    mg.addColorStop(0.00, "rgba(255,240,210,0.18)");
+    mg.addColorStop(0.25, "rgba(255,240,210,0.08)");
+    mg.addColorStop(1.00, "rgba(255,240,210,0.00)");
+    g.fillStyle = mg;
+    g.fillRect(0,0,S.w,S.h);
 
-    for(const f of S.flakesFront){
-      if(f.idx !== undefined && f.vx !== undefined){
-        f.ph += dt * 0.6;
-        f.x += (f.vx + Math.sin(f.ph)*6) * dt;
-        f.y += f.vy * dt;
+    // Haze
+    const hz = g.createRadialGradient(S.w*0.55, S.h*0.38, S.h*0.10, S.w*0.55, S.h*0.38, S.h*0.75);
+    hz.addColorStop(0.00, `rgba(255,255,255,${PROFILE.haze*0.22})`);
+    hz.addColorStop(0.45, `rgba(255,255,255,${PROFILE.haze*0.10})`);
+    hz.addColorStop(1.00, "rgba(255,255,255,0)");
+    g.fillStyle = hz;
+    g.fillRect(0,0,S.w,S.h);
 
-        if(f.y > S.h + 240){ f.y = -240; f.x = Math.random()*S.w; }
-        if(f.x < -260) f.x = S.w + 260;
-        if(f.x > S.w + 260) f.x = -260;
-      }else{
-        moveFlake(f, false);
-      }
-    }
+    // Vignette
+    const vg = g.createRadialGradient(S.w*0.5, S.h*0.45, S.h*0.20, S.w*0.5, S.h*0.45, S.h*0.95);
+    vg.addColorStop(0, "rgba(0,0,0,0)");
+    vg.addColorStop(1, `rgba(0,0,0,${PROFILE.vignette})`);
+    g.fillStyle = vg;
+    g.fillRect(0,0,S.w,S.h);
+
+    S.staticSky = c;
+  }
+
+  function buildFog(){
+    // Fog gradient used in snow draw (CSS pixels)
+    S.fogGrad = snow.createLinearGradient(0, S.h*0.58, 0, S.h);
+    S.fogGrad.addColorStop(0.0, "rgba(255,255,255,0)");
+    S.fogGrad.addColorStop(1.0, "rgba(255,255,255,0.055)");
+  }
+
+  function resize(){
+    S.w = window.innerWidth;
+    S.h = window.innerHeight;
+
+    // Hard DPR caps per layer
+    const dprBase = window.devicePixelRatio || 1;
+    S.skyDpr = clamp(PROFILE.dprSky, 1, Math.min(2, dprBase));
+    S.snowDpr = clamp(PROFILE.dprSnow, 1, Math.min(2, dprBase));
+
+    // Size canvases in device pixels
+    skyC.width = Math.floor(S.w * S.skyDpr);
+    skyC.height = Math.floor(S.h * S.skyDpr);
+    skyC.style.width = S.w + "px";
+    skyC.style.height = S.h + "px";
+
+    snowC.width = Math.floor(S.w * S.snowDpr);
+    snowC.height = Math.floor(S.h * S.snowDpr);
+    snowC.style.width = S.w + "px";
+    snowC.style.height = S.h + "px";
+
+    buildSprites();
+    seedStars();
+    seedSnow();
+    buildStaticSky();
+
+    // rebuild fog gradient in snow context space
+    snow.setTransform(S.snowDpr,0,0,S.snowDpr,0,0);
+    buildFog();
+
+    scheduleNextShoot();
   }
 
   function stepShooters(dt){
-    if(S.t >= S.nextShoot && Math.random() < 0.9){
+    if (S.t >= S.nextShoot && Math.random() < 0.9){
       S.shooters.push(makeShooter());
       scheduleNextShoot();
     }
@@ -587,31 +775,49 @@ typeWriter(msgEl, MESSAGE_TEXT, { cps: 28, startDelay: 1200, jitter: 0.35, curso
       sh.age += dt;
       sh.x += sh.vx * dt;
       sh.y += sh.vy * dt;
-      if(sh.age > sh.life || sh.y > S.h*1.2) S.shooters.splice(i,1);
+      if (sh.age > sh.life || sh.y > S.h*1.2) S.shooters.splice(i,1);
+    }
+  }
+
+  function stepSnow(dt){
+    const g = gust(S.t);
+    const wind = PROFILE.windBase + PROFILE.windGust * g;
+
+    for(const f of S.flakes){
+      if (f.kind === "bokeh"){
+        f.ph += dt * 0.6;
+        f.x += (f.vx + Math.sin(f.ph)*6) * dt;
+        f.y += f.vy * dt;
+
+        if(f.y > S.h + 240){ f.y = -240; f.x = Math.random()*S.w; }
+        if(f.x < -260) f.x = S.w + 260;
+        if(f.x > S.w + 260) f.x = -260;
+        continue;
+      }
+
+      const depth = lerp(0.35, 1.25, f.z);
+      const swirl = Math.sin(f.ph + S.t*(0.9 + f.wob)) * 18 * lerp(0.2, 1.0, f.z);
+
+      f.y += f.fall * dt;
+      f.x += (wind * depth + swirl) * dt;
+      f.ph += dt * (0.55 + f.wob) * 0.9;
+
+      if(f.y > S.h + 60){ f.y = -60; f.x = Math.random()*S.w; }
+      if(f.x < -80) f.x = S.w + 80;
+      if(f.x > S.w + 80) f.x = -80;
     }
   }
 
   function drawSky(){
-    sky.setTransform(S.dpr,0,0,S.dpr,0,0);
-    sky.clearRect(0,0,S.w,S.h);
+    // Draw static cached layer first
+    sky.setTransform(1,0,0,1,0,0);
+    sky.clearRect(0,0,skyC.width,skyC.height);
+    if (S.staticSky) sky.drawImage(S.staticSky, 0, 0);
 
-    const bg = sky.createLinearGradient(0,0,0,S.h);
-    bg.addColorStop(0, "rgba(2,10,8,0.00)");
-    bg.addColorStop(0.35, "rgba(2,10,8,0.10)");
-    bg.addColorStop(1, "rgba(0,0,0,0.28)");
-    sky.fillStyle = bg;
-    sky.fillRect(0,0,S.w,S.h);
+    // Now draw dynamic things in CSS pixels space
+    sky.setTransform(S.skyDpr,0,0,S.skyDpr,0,0);
 
-    const mx = S.w * 0.20;
-    const my = S.h * 0.18;
-    const mr = Math.min(S.w,S.h) * 0.22;
-    const mg = sky.createRadialGradient(mx,my, mr*0.06, mx,my, mr);
-    mg.addColorStop(0.00, "rgba(255,240,210,0.18)");
-    mg.addColorStop(0.25, "rgba(255,240,210,0.08)");
-    mg.addColorStop(1.00, "rgba(255,240,210,0.00)");
-    sky.fillStyle = mg;
-    sky.fillRect(0,0,S.w,S.h);
-
+    // Stars (kept light)
     for(const st of S.stars){
       const tw = 0.5 + 0.5*Math.sin(S.t*st.tw + st.ph);
       const a = clamp(st.a * (0.7 + 0.6*tw), 0, 1);
@@ -621,13 +827,7 @@ typeWriter(msgEl, MESSAGE_TEXT, { cps: 28, startDelay: 1200, jitter: 0.35, curso
       sky.fill();
     }
 
-    const hz = sky.createRadialGradient(S.w*0.55, S.h*0.38, S.h*0.10, S.w*0.55, S.h*0.38, S.h*0.75);
-    hz.addColorStop(0.00, `rgba(255,255,255,${CFG.haze*0.22})`);
-    hz.addColorStop(0.45, `rgba(255,255,255,${CFG.haze*0.10})`);
-    hz.addColorStop(1.00, "rgba(255,255,255,0)");
-    sky.fillStyle = hz;
-    sky.fillRect(0,0,S.w,S.h);
-
+    // Shooting stars (only place we do additive; limited count)
     if(S.shooters.length){
       sky.globalCompositeOperation = "lighter";
       for(const sh of S.shooters){
@@ -648,206 +848,147 @@ typeWriter(msgEl, MESSAGE_TEXT, { cps: 28, startDelay: 1200, jitter: 0.35, curso
         grad.addColorStop(1.00, "rgba(180,220,255,0)");
 
         sky.strokeStyle = grad;
-        sky.lineWidth = 2.2 + 1.8*(1-p);
+        sky.lineWidth = 2.0 + 1.6*(1-p);
         sky.lineCap = "round";
         sky.beginPath();
         sky.moveTo(sh.x, sh.y);
         sky.lineTo(x2, y2);
         sky.stroke();
 
-        const rg = sky.createRadialGradient(sh.x, sh.y, 0, sh.x, sh.y, 26);
+        const rg = sky.createRadialGradient(sh.x, sh.y, 0, sh.x, sh.y, 24);
         rg.addColorStop(0, `rgba(255,255,255,${a*0.55})`);
         rg.addColorStop(1, "rgba(255,255,255,0)");
         sky.fillStyle = rg;
         sky.beginPath();
-        sky.arc(sh.x, sh.y, 26, 0, Math.PI*2);
+        sky.arc(sh.x, sh.y, 24, 0, Math.PI*2);
         sky.fill();
       }
       sky.globalCompositeOperation = "source-over";
     }
-
-    const vg = sky.createRadialGradient(S.w*0.5, S.h*0.45, S.h*0.20, S.w*0.5, S.h*0.45, S.h*0.95);
-    vg.addColorStop(0, "rgba(0,0,0,0)");
-    vg.addColorStop(1, `rgba(0,0,0,${CFG.vignette})`);
-    sky.fillStyle = vg;
-    sky.fillRect(0,0,S.w,S.h);
   }
 
-  function drawSnowLayer(g, flakes, isFront){
-    g.setTransform(S.dpr,0,0,S.dpr,0,0);
-    g.clearRect(0,0,S.w,S.h);
-    if(!S.snowOn) return;
+  function drawSnow(){
+    snow.setTransform(1,0,0,1,0,0);
+    snow.clearRect(0,0,snowC.width,snowC.height);
+    if (!S.snowOn) return;
 
-    const driftX = Math.sin(S.t*0.12) * (isFront ? 2.0 : 1.2);
-    const driftY = Math.cos(S.t*0.10) * (isFront ? 1.5 : 0.9);
+    snow.setTransform(S.snowDpr,0,0,S.snowDpr,0,0);
 
-    for(const f of flakes){
+    const driftX = Math.sin(S.t*0.12) * 1.6;
+    const driftY = Math.cos(S.t*0.10) * 1.2;
 
-      // bokeh blobs
-      if(f.idx !== undefined && f.vx !== undefined){
-        const spr = S.sprites.bokeh[f.idx];
+    for(const f of S.flakes){
+      if (f.kind === "bokeh"){
+        const spr = S.sprBokeh[f.idx];
         const w = spr.width * f.s;
         const h = spr.height * f.s;
         const tw = 0.7 + 0.3*Math.sin(S.t*0.8 + f.ph);
-        g.globalAlpha = clamp(f.a * tw, 0, 1);
-        g.drawImage(spr, f.x - w/2 + driftX, f.y - h/2 + driftY, w, h);
+        snow.globalAlpha = clamp(f.a * tw, 0, 1);
+        snow.drawImage(spr, f.x - w/2 + driftX, f.y - h/2 + driftY, w, h);
         continue;
       }
-
-      // crisp snowflake shape
-      if(f.type === "flake"){
-        const baseR = (isFront ? 11 : 8) * f.size;
-        const x = f.x + driftX;
-        const y = f.y + driftY;
-
-        const tw = 0.9 + 0.1*Math.sin(S.t*1.6 + f.ph);
-        const a = clamp(f.alpha * tw * f.sparkle, 0, 1);
-
-        g.save();
-        g.translate(x, y);
-        g.rotate(f.spin * 0.25);
-
-        g.lineCap = "round";
-        g.lineJoin = "round";
-        g.strokeStyle = "rgba(255,255,255,1)";
-
-        // glow pass
-        g.globalAlpha = a * 0.35;
-        g.lineWidth = f.thick * (isFront ? 3.0 : 2.2);
-        const arms = f.arms || 6;
-        for(let i=0;i<arms;i++){
-          const ang = (Math.PI*2*i)/arms;
-          g.beginPath();
-          g.moveTo(0,0);
-          g.lineTo(Math.cos(ang)*baseR, Math.sin(ang)*baseR);
-          g.stroke();
-        }
-
-        // sharp pass
-        g.globalAlpha = a;
-        g.lineWidth = f.thick * (isFront ? 1.5 : 1.15);
-
-        for(let i=0;i<arms;i++){
-          const ang = (Math.PI*2*i)/arms;
-          const x2 = Math.cos(ang) * baseR;
-          const y2 = Math.sin(ang) * baseR;
-
-          g.beginPath();
-          g.moveTo(0,0);
-          g.lineTo(x2,y2);
-          g.stroke();
-
-          const branchR = baseR * 0.34;
-          const bx = Math.cos(ang) * baseR * 0.64;
-          const by = Math.sin(ang) * baseR * 0.64;
-
-          const bAng1 = ang + Math.PI/6;
-          const bAng2 = ang - Math.PI/6;
-
-          g.beginPath();
-          g.moveTo(bx,by);
-          g.lineTo(bx + Math.cos(bAng1)*branchR, by + Math.sin(bAng1)*branchR);
-          g.stroke();
-
-          g.beginPath();
-          g.moveTo(bx,by);
-          g.lineTo(bx + Math.cos(bAng2)*branchR, by + Math.sin(bAng2)*branchR);
-          g.stroke();
-        }
-
-        g.globalAlpha = a * 0.9;
-        g.fillStyle = "rgba(255,255,255,0.9)";
-        g.beginPath();
-        g.arc(0,0, baseR*0.11, 0, Math.PI*2);
-        g.fill();
-
-        g.restore();
-        continue;
-      }
-
-      // glow sprite
-      const spr = S.sprites.snow[f.spriteIdx];
-      const s = (isFront ? 0.70 : 0.62) * f.size;
-      const w = spr.width * s;
-      const h = spr.height * s;
 
       const tw = 0.9 + 0.1*Math.sin(S.t*1.6 + f.ph);
-      g.globalAlpha = clamp(f.alpha * tw * f.sparkle, 0, 1);
+      const a = clamp(f.alpha * tw * f.sparkle, 0, 1);
+      snow.globalAlpha = a;
 
-      if(isFront && f.z > 0.78){
-        g.save();
-        g.translate(f.x + driftX, f.y + driftY);
-        g.rotate(f.spin * 0.08);
-        g.drawImage(spr, -w/2, -h/2, w, h);
-        g.restore();
-      }else{
-        g.drawImage(spr, f.x - w/2 + driftX, f.y - h/2 + driftY, w, h);
+      if (f.kind === "flake"){
+        const spr = S.sprFlake[f.idx];
+        const s = f.size * 0.75;
+        const w = spr.width * s;
+        const h = spr.height * s;
+
+        // rotate only some flakes (cheaper overall)
+        if (f.z > 0.72){
+          snow.save();
+          snow.translate(f.x + driftX, f.y + driftY);
+          snow.rotate(f.spin * 0.10);
+          snow.drawImage(spr, -w/2, -h/2, w, h);
+          snow.restore();
+        } else {
+          snow.drawImage(spr, f.x - w/2 + driftX, f.y - h/2 + driftY, w, h);
+        }
+      } else {
+        const spr = S.sprGlow[f.idx];
+        const s = f.size * 0.64;
+        const w = spr.width * s;
+        const h = spr.height * s;
+        snow.drawImage(spr, f.x - w/2 + driftX, f.y - h/2 + driftY, w, h);
       }
     }
 
-    const fog = g.createLinearGradient(0, S.h*0.55, 0, S.h);
-    fog.addColorStop(0.0, "rgba(255,255,255,0)");
-    fog.addColorStop(1.0, isFront ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.04)");
-    g.globalAlpha = 1;
-    g.fillStyle = fog;
-    g.fillRect(0,0,S.w,S.h);
+    // subtle fog band (cached)
+    snow.globalAlpha = 1;
+    snow.fillStyle = S.fogGrad;
+    snow.fillRect(0,0,S.w,S.h);
   }
 
   function tick(ts){
+    if (!S.running){
+      requestAnimationFrame(tick);
+      return;
+    }
     if(!S.last) S.last = ts;
     const dt = Math.min(0.033, (ts - S.last)/1000);
     S.last = ts;
 
     S.t += dt;
 
-    if((Math.floor(S.t*2) % 4) === 0) seedSnow(false);
-
-    if(S.snowOn) stepSnow(dt);
+    // Update physics every frame (cheap enough), render at capped FPS
+    if (S.snowOn) stepSnow(dt);
     stepShooters(dt);
 
-    drawSky();
-    drawSnowLayer(back, S.flakesBack, false);
-    drawSnowLayer(front, S.flakesFront, true);
+    // Accumulate time for paced draws
+    S.skyAcc += dt;
+    S.snowAcc += dt;
+
+    const skyStep = 1 / PROFILE.skyFPS;
+    const snowStep = 1 / PROFILE.snowFPS;
+
+    if (S.skyAcc >= skyStep){
+      // keep acc bounded to avoid spiral
+      S.skyAcc = S.skyAcc % skyStep;
+      drawSky();
+    }
+    if (S.snowAcc >= snowStep){
+      S.snowAcc = S.snowAcc % snowStep;
+      drawSnow();
+    }
 
     requestAnimationFrame(tick);
   }
 
-  document.getElementById("snowBtn").addEventListener("click", ()=>{
+  // Snow toggle
+  const snowBtn = document.getElementById("snowBtn");
+  snowBtn.addEventListener("click", ()=>{
     S.snowOn = !S.snowOn;
-    document.getElementById("snowBtn").textContent = S.snowOn ? "Snow: ON ❄" : "Snow: OFF";
+    snowBtn.textContent = S.snowOn ? "Snow: ON ❄" : "Snow: OFF";
+    if (!S.snowOn){
+      // clear snow immediately
+      snow.setTransform(1,0,0,1,0,0);
+      snow.clearRect(0,0,snowC.width,snowC.height);
+    }
   });
 
-  scheduleNextShoot();
+  // Pause when hidden (major battery win on iPhone)
+  document.addEventListener("visibilitychange", ()=>{
+    S.running = !document.hidden;
+    if (document.hidden){
+      S.last = 0;
+    }
+  });
+
+  // Resize handling (debounced)
+  let rTO = null;
+  window.addEventListener("resize", ()=>{
+    clearTimeout(rTO);
+    rTO = setTimeout(resize, 120);
+  });
+
+  // Start
   resize();
-  window.addEventListener("resize", resize);
   requestAnimationFrame(tick);
 })();
-
-/* =========================
-   Audio controls
-   ========================= */
-const audioEl = document.getElementById("bgm");
-const musicBtn = document.getElementById("musicBtn");
-const vol = document.getElementById("vol");
-
-function setVol(){ audioEl.volume = Number(vol.value) / 100; }
-vol.addEventListener("input", setVol);
-setVol();
-
-musicBtn.addEventListener("click", async () => {
-  if (audioEl.paused) {
-    try{
-      audioEl.load();
-      await audioEl.play();
-      musicBtn.textContent = "⏸ Pause music";
-    }catch{
-      musicBtn.textContent = "▶ Play music";
-    }
-  } else {
-    audioEl.pause();
-    musicBtn.textContent = "▶ Play music";
-  }
-});
-  </script>
+</script>
 </body>
 </html>
